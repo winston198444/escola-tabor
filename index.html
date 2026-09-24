@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estat de les Aules - Escola Tabor</title>
+    <style>
+        body { font-family: sans-serif; margin: 15px; background: #f4f4f9; color: #333; }
+        header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+        h1 { margin: 0 0 5px 0; color: #222; font-size: 24px; }
+        .subtitle { color: #666; font-size: 14px; margin: 0; }
+        
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        input[type="text"] { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; width: 100%; max-width: 250px; }
+        button { padding: 8px 15px; font-size: 14px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        
+        @media (min-width: 600px) {
+            button { width: auto; }
+        }
+
+        .location-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Dynamic alert boxes */
+        .latest-box {
+            background: #eef6fc;
+            border-left: 5px solid #0066cc;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .latest-box.hot {
+            background: #ffe6e6;
+            border-left-color: #cc0000;
+        }
+        .latest-box.warm {
+            background: #fff8e6;
+            border-left-color: #e69500;
+        }
+        
+        .latest-box h3 {
+            margin: 0 0 8px 0;
+            color: #004080;
+            font-size: 15px;
+        }
+        .latest-box.hot h3 { color: #990000; }
+        .latest-box.warm h3 { color: #b35900; }
+
+        .metrics-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 14px;
+        }
+        .metric-item {
+            background: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #d0e1f9;
+            flex: 1 1 calc(50% - 10px);
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 500px) {
+            .metric-item { flex: auto; }
+        }
+
+        /* Responsive table container */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 13px; }
+        th { background-color: #f2f2f2; }
+        h2 { margin-top: 0; color: #333; font-size: 18px; }
+        details { margin-top: 15px; cursor: pointer; }
+        summary { font-weight: bold; color: #0066cc; font-size: 14px; }
+        .sync-info { font-size: 12px; color: #666; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Estat de les Aules</h1>
+            <p class="subtitle">Escola Tabor - Monitoratge</p>
+        </div>
+        <div>
+            <button onclick="fetchData()">Actualitzar</button>
+        </div>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Filtrar aula..." onkeyup="filterLocations()">
+        <span class="sync-info" id="syncTime"></span>
+    </div>
+
+    <div id="container">Carregant dades...</div>
+
+    <script>
+        // api endpoint for school tabor data
+        const apiUrl = 'https://aulesquecremen.cat/api/v1/public/chart-data?range=7d&view_mode=per_location&school_id=5073';
+
+        async function fetchData() {
+            try {
+                const container = document.getElementById('container');
+                container.innerHTML = 'Carregant dades...';
+                
+                const response = await fetch(apiUrl);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    container.innerHTML = '';
+                    
+                    result.data.forEach(loc => {
+                        const lastReading = loc.readings[loc.readings.length - 1] || {};
+                        const tempAvg = lastReading.temperature_avg ?? 0;
+                        
+                        // decide box style based on temperature
+                        let boxClass = 'latest-box';
+                        if (tempAvg >= 30) {
+                            boxClass += ' hot';
+                        } else if (tempAvg >= 26) {
+                            boxClass += ' warm';
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = 'location-card';
+                        card.setAttribute('data-name', loc.location_name.toLowerCase());
+                        
+                        let readingsRows = '';
+                        loc.readings.forEach(r => {
+                            readingsRows += `
+                                <tr>
+                                    <td>${r.label}</td>
+                                    <td>${r.temperature_avg} °C</td>
+                                    <td>${r.temperature_max} °C</td>
+                                    <td>${r.temperature_min} °C</td>
+                                    <td>${r.humidity} %</td>
+                                </tr>
+                            `;
+                        });
+
+                        card.innerHTML = `
+                            <h2>${loc.location_name}</h2>
+                            
+                            <div class="${boxClass}">
+                                <h3>Última lectura (${lastReading.label || 'N/A'})</h3>
+                                <div class="metrics-grid">
+                                    <div class="metric-item"><strong>Mitjana:</strong> ${lastReading.temperature_avg ?? 'N/A'} °C</div>
+                                    <div class="metric-item"><strong>Màx:</strong> ${lastReading.temperature_max ?? 'N/A'} °C</div>
+                                    <div class="metric-item"><strong>Mín:</strong> ${lastReading.temperature_min ?? 'N/A'} °C</div>
+                                    <div class="metric-item"><strong>Humitat:</strong> ${lastReading.humidity ?? 'N/A'} %</div>
+                                </div>
+                            </div>
+
+                            <details>
+                                <summary>Veure històric complet (${loc.readings.length} registres)</summary>
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Data / Hora</th>
+                                                <th>Mitjana</th>
+                                                <th>Màxima</th>
+                                                <th>Mínima</th>
+                                                <th>Humitat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${readingsRows}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        `;
+                        container.appendChild(card);
+                    });
+
+                    // update last sync timestamp
+                    const now = new Date().toLocaleTimeString();
+                    document.getElementById('syncTime').innerText = `Última sincronització: ${now}`;
+                    
+                    // re-apply filter if text was already typed
+                    filterLocations();
+                }
+            } catch (error) {
+                console.error('error loading data:', error);
+                document.getElementById('container').innerText = 'Error al carregar les dades.';
+            }
+        }
+
+        // filter cards based on search input
+        function filterLocations() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.location-card');
+            
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                if (name.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // initial load
+        fetchData();
+    </script>
+
+</body>
+</html>
