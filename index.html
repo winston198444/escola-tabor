@@ -6,7 +6,34 @@
     <title>Estat de les Aules - Escola Tabor</title>
     <style>
         body { font-family: sans-serif; margin: 15px; background: #f4f4f9; color: #333; }
-        header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+        
+        header { 
+            margin-bottom: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+
+        .header-logo {
+            max-height: 55px;
+            width: auto;
+            object-fit: contain;
+        }
+
         h1 { margin: 0 0 5px 0; color: #222; font-size: 24px; }
         .subtitle { color: #666; font-size: 14px; margin: 0; }
         
@@ -83,10 +110,15 @@
 <body>
 
     <header>
-        <div>
+        <div class="header-left">
             <h1>Escola Tabor</h1>
             <div class="subtitle">Temperatures i humitats de les aules</div>
         </div>
+        
+        <div class="header-center">
+            <img src="logo.png" alt="Logo Escola Tabor" class="header-logo">
+        </div>
+
         <div>
             <button onclick="fetchData()">Actualitzar</button>
         </div>
