@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estat de les Aules</title>
+    <title>Estat de les Aules - Escola Tabor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -36,6 +36,21 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            height: 48px;
+            width: 48px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .header-title h1 { margin: 0; font-size: 20px; font-weight: 700; }
@@ -89,7 +104,6 @@
         }
         input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-        /* Botons de rang i acció */
         .btn-group { display: flex; gap: 5px; }
         button {
             padding: 10px 16px;
@@ -136,7 +150,6 @@
 
         .chart-wrapper { position: relative; height: 200px; width: 100%; }
 
-        /* Spinner de càrrega */
         .status-msg {
             text-align: center;
             padding: 50px;
@@ -153,14 +166,24 @@
             margin: 0 auto 15px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-title">
-            <h1>Estat de les Aules</h1>
-            <p id="syncTime">Carregant informació...</p>
+        <div class="header-brand">
+            <img src="logo.png" alt="Logo Escola Tabor" class="header-logo">
+            <div class="header-title">
+                <h1>Escola Tabor</h1>
+                <p id="syncTime">Carregant informació...</p>
+            </div>
         </div>
         <div>
             <button class="primary" onclick="loadData()">Actualitzar dades</button>
@@ -203,6 +226,12 @@
         </div>
     </div>
 
+    <footer>
+        <p style="margin: 0; color: #64748b; font-size: 13px;">
+            Dades obtingudes de <a href="https://aulesquecremen.cat/" target="_blank" style="color: #0066cc; text-decoration: none; font-weight: 500;">aulesquecremen.cat</a>
+        </p>
+    </footer>
+
     <script>
         let currentRange = '7d';
 
@@ -243,7 +272,6 @@
                         const last = readings[readings.length - 1] || {};
                         const avgTemp = last.temperature_avg ?? 0;
 
-                        // Sumar per calcular la mitjana global
                         if (last.temperature_avg !== undefined) {
                             totalTempSum += last.temperature_avg;
                             if (last.temperature_avg > hottest.temp) {
@@ -252,7 +280,6 @@
                             }
                         }
 
-                        // Colors de targeta (afegit també 'cold' per sota de 18ºC)
                         let badgeClass = 'reading-badge';
                         if (avgTemp >= 30) badgeClass += ' hot';
                         else if (avgTemp >= 26) badgeClass += ' warm';
@@ -289,7 +316,6 @@
 
                         appContainer.appendChild(card);
 
-                        // Dades pel gràfic
                         const labels = readings.map(r => r.label);
                         const temps = readings.map(r => r.temperature_avg);
                         const humidity = readings.map(r => r.humidity);
@@ -348,7 +374,6 @@
                         });
                     });
 
-                    // Omplir dades del panell superior de resum
                     if (roomCount > 0) {
                         document.getElementById('avgSchoolTemp').innerText = (totalTempSum / roomCount).toFixed(1) + ' °C';
                         document.getElementById('totalRooms').innerText = roomCount;
