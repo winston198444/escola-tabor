@@ -83,18 +83,27 @@
             flex-wrap: wrap;
         }
 
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            max-width: 600px;
+            flex-wrap: wrap;
+        }
+
         input[type="text"] {
             padding: 10px 14px;
             font-size: 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            width: 100%;
-            max-width: 400px;
+            flex: 1;
+            min-width: 200px;
             background: var(--card-bg);
             outline: none;
         }
         input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
+        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
         button {
             padding: 10px 16px;
             font-size: 14px;
@@ -109,6 +118,7 @@
         button:hover { background-color: #f1f5f9; }
         button.primary { background-color: var(--primary); color: white; border-color: var(--primary); }
         button.primary:hover { background-color: var(--primary-dark); }
+        button.active { background-color: var(--primary); color: white; border-color: var(--primary); }
 
         .location-card {
             background: var(--card-bg);
@@ -179,10 +189,9 @@
     </header>
 
     <div class="main-container">
-        <!-- Panell de resum general -->
         <div class="summary-bar" id="summaryBar" style="display: none;">
             <div class="summary-card">
-                <span>Temp. Mitjana Actual</span>
+                <span>Temp. Mitjana</span>
                 <strong id="avgSchoolTemp">--</strong>
             </div>
             <div class="summary-card">
@@ -196,7 +205,15 @@
         </div>
 
         <div class="controls">
-            <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
+            <div class="filter-group">
+                <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
+                <div class="btn-group">
+                    <button id="btn-24h" onclick="setRange('24h')">24 hores</button>
+                    <button id="btn-7d" class="active" onclick="setRange('7d')">7 dies</button>
+                    <button id="btn-30d" onclick="setRange('30d')">30 dies</button>
+                    <button id="btn-max" onclick="setRange('max')">Històric</button>
+                </div>
+            </div>
         </div>
 
         <div id="app">
@@ -214,6 +231,15 @@
     </footer>
 
     <script>
+        let currentRange = '7d';
+
+        function setRange(range) {
+            currentRange = range;
+            document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + range).classList.add('active');
+            loadData();
+        }
+
         async function loadData() {
             const appContainer = document.getElementById('app');
             const summaryBar = document.getElementById('summaryBar');
@@ -221,13 +247,13 @@
             appContainer.innerHTML = `
                 <div class="status-msg">
                     <div class="spinner"></div>
-                    Carregant registres de les aules...
+                    Carregant registres...
                 </div>
             `;
             summaryBar.style.display = 'none';
 
-            // Endpoint clau: range=24h combinat amb view_mode=per_location per obtenir les dades d'avui per cada aula
-            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=24h&view_mode=per_location&school_id=5073`;
+            // ensure view_mode is always per_location to retrieve the room names
+            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=${currentRange}&view_mode=per_location&school_id=5073`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -241,27 +267,42 @@
                     let hottest = { name: '-', temp: -999 };
 
                     json.data.forEach((location, idx) => {
+                        if (!location.location_name) return;
+
                         const readings = location.readings || [];
                         if (readings.length === 0) return;
 
-                        const temps = readings.map(r => r.temperature ?? r.temperature_avg ?? 0);
-                        const humidity = readings.map(r => r.humidity ?? 0);
-                        
+                        // parse labels handling different string formats returned by API
                         const labels = readings.map(r => {
-                            let label = r.label;
-                            if (!isNaN(label) && label !== null) {
-                                let hour = Math.floor(Number(label));
-                                return `${hour < 10 ? '0' + hour : hour}:00`;
+                            const lbl = String(r.label);
+                            if (lbl === 'null' || lbl === 'undefined') return '';
+                            
+                            if (!isNaN(lbl) && !lbl.includes('-')) {
+                                const h = parseInt(lbl, 10);
+                                return (h < 10 ? '0' + h : h) + ':00';
                             }
-                            return label;
+                            if (lbl.includes(' ')) {
+                                const parts = lbl.split(' ');
+                                const dateParts = parts[0].split('-');
+                                return `${dateParts[2]}/${dateParts[1]} ${parts[1]}`;
+                            }
+                            if (lbl.includes('-')) {
+                                const parts = lbl.split('-');
+                                return `${parts[2]}/${parts[1]}`;
+                            }
+                            return lbl;
                         });
 
-                        const last = readings[readings.length - 1] || {};
-                        const currentTemp = last.temperature ?? last.temperature_avg ?? 0;
-                        const maxTemp = Math.max(...temps);
-                        const minTemp = Math.min(...temps);
+                        // fallback map due to dynamic parameter naming
+                        const temps = readings.map(r => r.temperature_avg !== undefined ? r.temperature_avg : (r.temperature || 0));
+                        const humidity = readings.map(r => r.humidity || 0);
 
-                        if (currentTemp !== undefined) {
+                        const last = readings[readings.length - 1] || {};
+                        const currentTemp = last.temperature_avg !== undefined ? last.temperature_avg : (last.temperature || 0);
+                        const maxTemp = last.temperature_max !== undefined ? last.temperature_max : Math.max(...temps);
+                        const minTemp = last.temperature_min !== undefined ? last.temperature_min : Math.min(...temps);
+
+                        if (currentTemp) {
                             totalTempSum += currentTemp;
                             roomCount++;
                             if (currentTemp > hottest.temp) {
@@ -277,21 +318,21 @@
 
                         const card = document.createElement('div');
                         card.className = 'location-card';
-                        card.setAttribute('data-name', (location.location_name || '').toLowerCase());
+                        card.setAttribute('data-name', location.location_name.toLowerCase());
 
                         card.innerHTML = `
-                            <h2>${location.location_name || 'Ubicació sense nom'}</h2>
+                            <h2>${location.location_name}</h2>
                             <div class="${badgeClass}">
                                 <div class="metric">
                                     <span>Actual</span>
                                     <strong>${currentTemp} °C</strong>
                                 </div>
                                 <div class="metric">
-                                    <span>Màxima (24h)</span>
+                                    <span>Màxima</span>
                                     <strong>${maxTemp} °C</strong>
                                 </div>
                                 <div class="metric">
-                                    <span>Mínima (24h)</span>
+                                    <span>Mínima</span>
                                     <strong>${minTemp} °C</strong>
                                 </div>
                                 <div class="metric">
@@ -306,6 +347,7 @@
 
                         appContainer.appendChild(card);
 
+                        // setup chart for current room
                         const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
                         new Chart(ctx, {
                             type: 'line',
@@ -372,7 +414,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                appContainer.innerHTML = '<div class="status-msg">No s\'han pogut carregar les dades de l\'API.</div>';
+                appContainer.innerHTML = '<div class="status-msg">Error de connexió amb l\'API.</div>';
             }
         }
 
