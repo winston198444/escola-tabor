@@ -3,209 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estat de les Aules - Escola Tabor</title>
-    <!-- Importem Chart.js per fer gràfics dinàmics -->
+    <title>Estat de les Aules</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
-        
-        header { 
-            margin-bottom: 25px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
         }
 
-        .header-brand {
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        header {
+            max-width: 1000px;
+            margin: 0 auto 20px auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
             gap: 15px;
         }
 
-        .header-logo {
-            height: 48px;
-            width: 48px;
-            object-fit: contain;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+        .header-title h1 { margin: 0; font-size: 20px; font-weight: 700; }
+        .header-title p { margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted); }
 
-        .header-titles h1 { 
-            margin: 0 0 2px 0; 
-            color: #1a1a1a; 
-            font-size: 22px; 
-            font-weight: 700;
-        }
-        
-        .subtitle { 
-            color: #666; 
-            font-size: 13px; 
-            margin: 0; 
-        }
-        
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        input[type="text"] { padding: 9px 14px; font-size: 14px; border: 1px solid #dcdcdc; border-radius: 6px; width: 100%; max-width: 280px; background: white; }
-        button { padding: 9px 16px; font-size: 14px; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
-        button:hover { background: #0052a3; }
-        
-        .location-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        
-        .latest-box {
-            background: #f0f5fa;
-            border-left: 4px solid #0066cc;
-            padding: 14px;
-            margin: 12px 0;
-            border-radius: 4px;
-        }
-        .latest-box.hot { background: #fdf2f2; border-left-color: #d32f2f; }
-        .latest-box.warm { background: #fffbf0; border-left-color: #f57c00; }
-        
-        .latest-box h3 {
-            margin: 0 0 10px 0;
-            color: #004080;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .latest-box.hot h3 { color: #c62828; }
-        .latest-box.warm h3 { color: #e65100; }
+        .main-container { max-width: 1000px; margin: 0 auto; }
 
-        .metrics-grid {
+        /* Panell de resum general */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .summary-card span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .summary-card strong { font-size: 18px; display: block; margin-top: 5px; color: var(--primary); }
+
+        .controls {
             display: flex;
-            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            max-width: 500px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            padding: 10px 14px;
             font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+            background: var(--card-bg);
+            outline: none;
         }
-        .metric-item {
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #e1e8ed;
-            flex: 1 1 calc(50% - 12px);
-            box-sizing: border-box;
-        }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 220px;
-            margin-top: 15px;
+        /* Botons de rang i acció */
+        .btn-group { display: flex; gap: 5px; }
+        button {
+            padding: 10px 16px;
+            font-size: 14px;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
         }
+        button:hover { background-color: #f1f5f9; }
+        button.primary { background-color: var(--primary); color: white; border-color: var(--primary); }
+        button.primary:hover { background-color: var(--primary-dark); }
+        button.active { background-color: var(--primary); color: white; border-color: var(--primary); }
 
-        h2 { margin-top: 0; color: #1e293b; font-size: 17px; font-weight: 600; }
-        .sync-info { font-size: 12px; color: #64748b; width: 100%; }
-        
-        footer {
-            margin-top: 50px;
-            padding: 20px 0;
-            border-top: 1px solid #e1e8ed;
+        .location-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+        .location-card h2 { margin: 0 0 15px 0; font-size: 18px; font-weight: 600; }
+
+        .reading-badge {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            font-size: 13px;
+        }
+        .reading-badge.hot { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+        .reading-badge.warm { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .reading-badge.cold { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+        .metric span { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .metric strong { font-size: 15px; }
+
+        .chart-wrapper { position: relative; height: 200px; width: 100%; }
+
+        /* Spinner de càrrega */
+        .status-msg {
             text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+            font-size: 15px;
         }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-brand">
-            <img src="logo.png" alt="Logo Escola Tabor" class="header-logo">
-            <div class="header-titles">
-                <h1>Escola Tabor</h1>
-                <div class="subtitle">Temperatures i humitats de les aules</div>
-            </div>
+        <div class="header-title">
+            <h1>Estat de les Aules</h1>
+            <p id="syncTime">Carregant informació...</p>
         </div>
         <div>
-            <button onclick="fetchData()">Actualitzar</button>
+            <button class="primary" onclick="loadData()">Actualitzar dades</button>
         </div>
     </header>
 
-    <div class="controls">
-        <input type="text" id="searchInput" placeholder="Filtrar aula..." onkeyup="filterLocations()">
-        <span class="sync-info" id="syncTime"></span>
+    <div class="main-container">
+        <!-- Panell de resum general -->
+        <div class="summary-bar" id="summaryBar" style="display: none;">
+            <div class="summary-card">
+                <span>Temp. Mitjana Escola</span>
+                <strong id="avgSchoolTemp">--</strong>
+            </div>
+            <div class="summary-card">
+                <span>Total d'Aules</span>
+                <strong id="totalRooms">--</strong>
+            </div>
+            <div class="summary-card">
+                <span>Aula més calenta</span>
+                <strong id="hottestRoom" style="font-size: 15px; margin-top: 6px;">--</strong>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
+                <div class="btn-group">
+                    <button id="btn-1d" onclick="changeRange('1d')">24h</button>
+                    <button id="btn-3d" onclick="changeRange('3d')">3 dies</button>
+                    <button id="btn-7d" class="active" onclick="changeRange('7d')">7 dies</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="app">
+            <div class="status-msg">
+                <div class="spinner"></div>
+                Carregant registres de les aules...
+            </div>
+        </div>
     </div>
 
-    <div id="container">Carregant dades...</div>
-
     <script>
-        const apiUrl = 'https://aulesquecremen.cat/api/v1/public/chart-data?range=7d&view_mode=per_location&school_id=5073';
+        let currentRange = '7d';
 
-        async function fetchData() {
+        function changeRange(range) {
+            currentRange = range;
+            document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${range}`).classList.add('active');
+            loadData();
+        }
+
+        async function loadData() {
+            const appContainer = document.getElementById('app');
+            const summaryBar = document.getElementById('summaryBar');
+            
+            appContainer.innerHTML = `
+                <div class="status-msg">
+                    <div class="spinner"></div>
+                    Carregant registres de les aules...
+                </div>
+            `;
+            summaryBar.style.display = 'none';
+
+            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=${currentRange}&view_mode=per_location&school_id=5073`;
+
             try {
-                const container = document.getElementById('container');
-                container.innerHTML = 'Carregant dades...';
-                
                 const response = await fetch(apiUrl);
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    container.innerHTML = '';
+                const json = await response.json();
+
+                if (json.status === 'success' && json.data) {
+                    appContainer.innerHTML = '';
                     
-                    result.data.forEach((loc, index) => {
-                        const lastReading = loc.readings[loc.readings.length - 1] || {};
-                        const tempAvg = lastReading.temperature_avg ?? 0;
-                        
-                        let boxClass = 'latest-box';
-                        if (tempAvg >= 30) {
-                            boxClass += ' hot';
-                        } else if (tempAvg >= 26) {
-                            boxClass += ' warm';
+                    let totalTempSum = 0;
+                    let roomCount = json.data.length;
+                    let hottest = { name: '-', temp: -999 };
+
+                    json.data.forEach((location, idx) => {
+                        const readings = location.readings || [];
+                        const last = readings[readings.length - 1] || {};
+                        const avgTemp = last.temperature_avg ?? 0;
+
+                        // Sumar per calcular la mitjana global
+                        if (last.temperature_avg !== undefined) {
+                            totalTempSum += last.temperature_avg;
+                            if (last.temperature_avg > hottest.temp) {
+                                hottest.temp = last.temperature_avg;
+                                hottest.name = location.location_name;
+                            }
                         }
+
+                        // Colors de targeta (afegit també 'cold' per sota de 18ºC)
+                        let badgeClass = 'reading-badge';
+                        if (avgTemp >= 30) badgeClass += ' hot';
+                        else if (avgTemp >= 26) badgeClass += ' warm';
+                        else if (avgTemp > 0 && avgTemp < 18) badgeClass += ' cold';
 
                         const card = document.createElement('div');
                         card.className = 'location-card';
-                        card.setAttribute('data-name', loc.location_name.toLowerCase());
-                        
-                        const canvasId = `chart-${index}`;
+                        card.setAttribute('data-name', location.location_name.toLowerCase());
 
                         card.innerHTML = `
-                            <h2>${loc.location_name}</h2>
-                            <div class="${boxClass}">
-                                <h3>Última lectura (${lastReading.label || 'N/A'})</h3>
-                                <div class="metrics-grid">
-                                    <div class="metric-item"><strong>Mitjana:</strong> ${lastReading.temperature_avg ?? 'N/A'} °C</div>
-                                    <div class="metric-item"><strong>Màx:</strong> ${lastReading.temperature_max ?? 'N/A'} °C</div>
-                                    <div class="metric-item"><strong>Mín:</strong> ${lastReading.temperature_min ?? 'N/A'} °C</div>
-                                    <div class="metric-item"><strong>Humitat:</strong> ${lastReading.humidity ?? 'N/A'} %</div>
+                            <h2>${location.location_name}</h2>
+                            <div class="${badgeClass}">
+                                <div class="metric">
+                                    <span>Mitjana</span>
+                                    <strong>${last.temperature_avg ?? '-'} °C</strong>
+                                </div>
+                                <div class="metric">
+                                    <span>Màxima</span>
+                                    <strong>${last.temperature_max ?? '-'} °C</strong>
+                                </div>
+                                <div class="metric">
+                                    <span>Mínima</span>
+                                    <strong>${last.temperature_min ?? '-'} °C</strong>
+                                </div>
+                                <div class="metric">
+                                    <span>Humitat</span>
+                                    <strong>${last.humidity ?? '-'} %</strong>
                                 </div>
                             </div>
-                            <div class="chart-container">
-                                <canvas id="${canvasId}"></canvas>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-${idx}"></canvas>
                             </div>
                         `;
-                        container.appendChild(card);
 
-                        // Dades per al gràfic amb Chart.js
-                        const labels = loc.readings.map(r => r.label);
-                        const dataTemps = loc.readings.map(r => r.temperature_avg);
-                        const dataHum = loc.readings.map(r => r.humidity);
+                        appContainer.appendChild(card);
 
-                        const ctx = document.getElementById(canvasId).getContext('2d');
+                        // Dades pel gràfic
+                        const labels = readings.map(r => r.label);
+                        const temps = readings.map(r => r.temperature_avg);
+                        const humidity = readings.map(r => r.humidity);
+
+                        const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
                         new Chart(ctx, {
                             type: 'line',
                             data: {
                                 labels: labels,
                                 datasets: [
                                     {
-                                        label: 'Temp. Mitjana (°C)',
-                                        data: dataTemps,
-                                        borderColor: '#d32f2f',
-                                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                                        label: 'Temp (°C)',
+                                        data: temps,
+                                        borderColor: '#ef4444',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
                                         borderWidth: 2,
-                                        tension: 0.3,
+                                        tension: 0.2,
                                         yAxisID: 'y'
                                     },
                                     {
                                         label: 'Humitat (%)',
-                                        data: dataHum,
-                                        borderColor: '#0066cc',
-                                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                                        data: humidity,
+                                        borderColor: '#3b82f6',
+                                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
                                         borderWidth: 2,
-                                        tension: 0.3,
+                                        tension: 0.2,
                                         yAxisID: 'y1'
                                     }
                                 ]
@@ -213,56 +323,57 @@
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+                                },
                                 scales: {
                                     y: {
                                         type: 'linear',
-                                        display: true,
                                         position: 'left',
-                                        title: { display: true, text: '°C' }
+                                        grid: { color: '#f1f5f9' },
+                                        ticks: { font: { size: 10 } }
                                     },
                                     y1: {
                                         type: 'linear',
-                                        display: true,
                                         position: 'right',
                                         grid: { drawOnChartArea: false },
-                                        title: { display: true, text: '%' }
+                                        ticks: { font: { size: 10 } }
+                                    },
+                                    x: {
+                                        grid: { display: false },
+                                        ticks: { font: { size: 10 }, maxTicksLimit: 6 }
                                     }
                                 }
                             }
                         });
                     });
 
-                    const now = new Date().toLocaleTimeString();
-                    document.getElementById('syncTime').innerText = `Última sincronització: ${now}`;
-                    filterLocations();
+                    // Omplir dades del panell superior de resum
+                    if (roomCount > 0) {
+                        document.getElementById('avgSchoolTemp').innerText = (totalTempSum / roomCount).toFixed(1) + ' °C';
+                        document.getElementById('totalRooms').innerText = roomCount;
+                        document.getElementById('hottestRoom').innerText = `${hottest.name} (${hottest.temp}°C)`;
+                        summaryBar.style.display = 'grid';
+                    }
+
+                    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('syncTime').innerText = `Última actualització: ${timeStr}`;
                 }
-            } catch (error) {
-                console.error('error loading data:', error);
-                document.getElementById('container').innerText = 'Error al carregar les dades.';
+            } catch (err) {
+                console.error(err);
+                appContainer.innerHTML = '<div class="status-msg">No s\'han pogut carregar les dades de l\'API.</div>';
             }
         }
 
-        function filterLocations() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.location-card');
-            
-            cards.forEach(card => {
+        function filterAules() {
+            const query = document.getElementById('filterInput').value.toLowerCase();
+            document.querySelectorAll('.location-card').forEach(card => {
                 const name = card.getAttribute('data-name');
-                if (name.includes(query)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = name.includes(query) ? 'block' : 'none';
             });
         }
 
-        fetchData();
+        loadData();
     </script>
-    
-    <footer>
-        <p style="margin: 0; color: #64748b; font-size: 13px;">
-            Dades obtingudes de <a href="https://aulesquecremen.cat/" target="_blank" style="color: #0066cc; text-decoration: none; font-weight: 500;">aulesquecremen.cat</a>
-        </p>
-    </footer>
 </body>
 </html>
