@@ -226,6 +226,7 @@
             `;
             summaryBar.style.display = 'none';
 
+            // Endpoint clau: range=24h combinat amb view_mode=per_location per obtenir les dades d'avui per cada aula
             const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=24h&view_mode=per_location&school_id=5073`;
 
             try {
@@ -246,7 +247,6 @@
                         const temps = readings.map(r => r.temperature ?? r.temperature_avg ?? 0);
                         const humidity = readings.map(r => r.humidity ?? 0);
                         
-                        // Transformar el label numèric (0, 1, 2...) a format d'hora exacte (00:00, 01:00...)
                         const labels = readings.map(r => {
                             let label = r.label;
                             if (!isNaN(label) && label !== null) {
@@ -277,10 +277,10 @@
 
                         const card = document.createElement('div');
                         card.className = 'location-card';
-                        card.setAttribute('data-name', location.location_name.toLowerCase());
+                        card.setAttribute('data-name', (location.location_name || '').toLowerCase());
 
                         card.innerHTML = `
-                            <h2>${location.location_name}</h2>
+                            <h2>${location.location_name || 'Ubicació sense nom'}</h2>
                             <div class="${badgeClass}">
                                 <div class="metric">
                                     <span>Actual</span>
