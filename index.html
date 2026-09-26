@@ -84,27 +84,18 @@
             flex-wrap: wrap;
         }
 
-        .filter-group {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            max-width: 500px;
-            flex-wrap: wrap;
-        }
-
         input[type="text"] {
             padding: 10px 14px;
             font-size: 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            flex: 1;
-            min-width: 200px;
+            width: 100%;
+            max-width: 400px;
             background: var(--card-bg);
             outline: none;
         }
         input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-        .btn-group { display: flex; gap: 5px; }
         button {
             padding: 10px 16px;
             font-size: 14px;
@@ -119,7 +110,6 @@
         button:hover { background-color: #f1f5f9; }
         button.primary { background-color: var(--primary); color: white; border-color: var(--primary); }
         button.primary:hover { background-color: var(--primary-dark); }
-        button.active { background-color: var(--primary); color: white; border-color: var(--primary); }
 
         .location-card {
             background: var(--card-bg);
@@ -208,14 +198,7 @@
         </div>
 
         <div class="controls">
-            <div class="filter-group">
-                <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
-                <div class="btn-group">
-                    <button id="btn-1d" onclick="changeRange('1d')">24h</button>
-                    <button id="btn-3d" onclick="changeRange('3d')">3 dies</button>
-                    <button id="btn-7d" class="active" onclick="changeRange('7d')">7 dies</button>
-                </div>
-            </div>
+            <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
         </div>
 
         <div id="app">
@@ -233,15 +216,6 @@
     </footer>
 
     <script>
-        let currentRange = '7d';
-
-        function changeRange(range) {
-            currentRange = range;
-            document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${range}`).classList.add('active');
-            loadData();
-        }
-
         async function loadData() {
             const appContainer = document.getElementById('app');
             const summaryBar = document.getElementById('summaryBar');
@@ -254,8 +228,7 @@
             `;
             summaryBar.style.display = 'none';
 
-            // Enviem directament el rang a l'API (1d, 3d o 7d) perquè retorni la granularitat correcta
-            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=${currentRange}&view_mode=per_location&school_id=5073`;
+            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=max&view_mode=per_location&school_id=5073`;
 
             try {
                 const response = await fetch(apiUrl);
