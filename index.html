@@ -12,7 +12,7 @@
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #1e293b;
-            --text-muted: #64748b;
+            --text-muted: #475569; /* Millorat per a major contrast */
             --border: #e2e8f0;
         }
         
@@ -102,6 +102,10 @@
             outline: none;
         }
         input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        input[type="text"]:focus-visible, button:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
 
         .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
         button {
@@ -206,7 +210,7 @@
 
         <div class="controls">
             <div class="filter-group">
-                <input type="text" id="filterInput" placeholder="Cercar aula..." onkeyup="filterAules()">
+                <input type="text" id="filterInput" placeholder="Cercar aula..." aria-label="Cercar aula" onkeyup="filterAules()">
                 <div class="btn-group">
                     <button id="btn-24h" onclick="setRange('24h')">24 hores</button>
                     <button id="btn-7d" class="active" onclick="setRange('7d')">7 dies</button>
@@ -225,7 +229,7 @@
     </div>
 
     <footer>
-        <p style="margin: 0; color: #64748b; font-size: 13px;">
+        <p style="margin: 0; color: var(--text-muted); font-size: 13px;">
             Dades obtingudes de <a href="https://aulesquecremen.cat/" target="_blank" style="color: #0066cc; text-decoration: none; font-weight: 500;">aulesquecremen.cat</a>
         </p>
     </footer>
@@ -316,6 +320,7 @@
                         const card = document.createElement('div');
                         card.className = 'location-card';
                         card.setAttribute('data-name', location.location_name.toLowerCase());
+                        card.setAttribute('aria-label', `Evolució de temperatura i humitat per a ${location.location_name}`);
 
                         card.innerHTML = `
                             <h2>${location.location_name}</h2>
@@ -328,7 +333,7 @@
                                     <span>Màxima</span>
                                     <strong>${maxTemp} °C</strong>
                                 </div>
-                                <div class="6metric">
+                                <div class="metric">
                                     <span>Mínima</span>
                                     <strong>${minTemp} °C</strong>
                                 </div>
@@ -413,7 +418,6 @@
                 appContainer.innerHTML = '<div class="status-msg">Error de connexió amb l\'API.</div>';
             }
             
-            // Reaplicar el filtre actiu per si s'havia escrit alguna cosa a la barra de cerca abans de recarregar
             filterAules();
         }
 
