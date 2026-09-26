@@ -254,8 +254,8 @@
             `;
             summaryBar.style.display = 'none';
 
-            // Demanem sempre rang llarg a l'API per assegurar que tenim dades i filtrar-les nosaltres de manera fiable
-            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=max&view_mode=per_location&school_id=5073`;
+            // Enviem directament el rang a l'API (1d, 3d o 7d) perquè retorni la granularitat correcta
+            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=${currentRange}&view_mode=per_location&school_id=5073`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -268,32 +268,8 @@
                     let roomCount = json.data.length;
                     let hottest = { name: '-', temp: -999 };
 
-                    // Determinar límit de temps segons el botó triat
-                    const now = new Date();
-                    let hoursLimit = 24;
-                    if (currentRange === '3d') hoursLimit = 24 * 3;
-                    if (currentRange === '7d') hoursLimit = 24 * 7;
-                    const cutoffTime = new Date(now.getTime() - (hoursLimit * 60 * 60 * 1000));
-
                     json.data.forEach((location, idx) => {
-                        let readings = location.readings || [];
-
-                        // Filtrar les lectures pel rang de temps seleccionat
-                        readings = readings.filter(r => {
-                            if (!r.label) return true;
-                            // Intentar convertir l'etiqueta o data a objecte Date
-                            const readingDate = new Date(r.label);
-                            if (!isNaN(readingDate)) {
-                                return readingDate >= cutoffTime;
-                            }
-                            return true;
-                        });
-
-                        // Si després del filtre no queden lectures, agafem almenys l'última per no deixar-ho buit
-                        if (readings.length === 0 && location.readings.length > 0) {
-                            readings = [location.readings[location.readings.length - 1]];
-                        }
-
+                        const readings = location.readings || [];
                         const last = readings[readings.length - 1] || {};
                         const avgTemp = last.temperature_avg ?? 0;
 
@@ -357,7 +333,7 @@
                                         borderColor: '#ef4444',
                                         backgroundColor: 'rgba(239, 68, 68, 0.05)',
                                         borderWidth: 2,
-                                       tension: 0.2,
+                                        tension: 0.2,
                                         yAxisID: 'y'
                                     },
                                     {
