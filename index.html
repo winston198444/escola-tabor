@@ -58,7 +58,6 @@
 
         .main-container { max-width: 1000px; margin: 0 auto; }
 
-        /* Panell de resum general */
         .summary-bar {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -227,7 +226,6 @@
             `;
             summaryBar.style.display = 'none';
 
-            // Canviat a range=24h per obtenir les dades d'avui en curs per cada ubicació
             const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=24h&view_mode=per_location&school_id=5073`;
 
             try {
@@ -245,8 +243,23 @@
                         const readings = location.readings || [];
                         if (readings.length === 0) return;
 
+                        const temps = readings.map(r => r.temperature ?? r.temperature_avg ?? 0);
+                        const humidity = readings.map(r => r.humidity ?? 0);
+                        
+                        // Transformar el label numèric (0, 1, 2...) a format d'hora exacte (00:00, 01:00...)
+                        const labels = readings.map(r => {
+                            let label = r.label;
+                            if (!isNaN(label) && label !== null) {
+                                let hour = Math.floor(Number(label));
+                                return `${hour < 10 ? '0' + hour : hour}:00`;
+                            }
+                            return label;
+                        });
+
                         const last = readings[readings.length - 1] || {};
                         const currentTemp = last.temperature ?? last.temperature_avg ?? 0;
+                        const maxTemp = Math.max(...temps);
+                        const minTemp = Math.min(...temps);
 
                         if (currentTemp !== undefined) {
                             totalTempSum += currentTemp;
@@ -274,12 +287,12 @@
                                     <strong>${currentTemp} °C</strong>
                                 </div>
                                 <div class="metric">
-                                    <span>Màxima</span>
-                                    <strong>${last.temperature_max ?? currentTemp} °C</strong>
+                                    <span>Màxima (24h)</span>
+                                    <strong>${maxTemp} °C</strong>
                                 </div>
                                 <div class="metric">
-                                    <span>Mínima</span>
-                                    <strong>${last.temperature_min ?? currentTemp} °C</strong>
+                                    <span>Mínima (24h)</span>
+                                    <strong>${minTemp} °C</strong>
                                 </div>
                                 <div class="metric">
                                     <span>Humitat</span>
@@ -292,10 +305,6 @@
                         `;
 
                         appContainer.appendChild(card);
-
-                        const labels = readings.map(r => r.label);
-                        const temps = readings.map(r => r.temperature ?? r.temperature_avg);
-                        const humidity = readings.map(r => r.humidity);
 
                         const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
                         new Chart(ctx, {
@@ -344,7 +353,7 @@
                                     },
                                     x: {
                                         grid: { display: false },
-                                        ticks: { font: { size: 10 }, maxTicksLimit: 6 }
+                                        ticks: { font: { size: 10 }, maxTicksLimit: 8 }
                                     }
                                 }
                             }
