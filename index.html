@@ -183,7 +183,7 @@
         <!-- Panell de resum general -->
         <div class="summary-bar" id="summaryBar" style="display: none;">
             <div class="summary-card">
-                <span>Temp. Mitjana Escola</span>
+                <span>Temp. Mitjana Actual</span>
                 <strong id="avgSchoolTemp">--</strong>
             </div>
             <div class="summary-card">
@@ -227,7 +227,8 @@
             `;
             summaryBar.style.display = 'none';
 
-            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=max&view_mode=per_location&school_id=5073`;
+            // Canviat a range=24h per obtenir les dades d'avui en curs per cada ubicació
+            const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=24h&view_mode=per_location&school_id=5073`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -237,26 +238,29 @@
                     appContainer.innerHTML = '';
                     
                     let totalTempSum = 0;
-                    let roomCount = json.data.length;
+                    let roomCount = 0;
                     let hottest = { name: '-', temp: -999 };
 
                     json.data.forEach((location, idx) => {
                         const readings = location.readings || [];
-                        const last = readings[readings.length - 1] || {};
-                        const avgTemp = last.temperature_avg ?? 0;
+                        if (readings.length === 0) return;
 
-                        if (last.temperature_avg !== undefined) {
-                            totalTempSum += last.temperature_avg;
-                            if (last.temperature_avg > hottest.temp) {
-                                hottest.temp = last.temperature_avg;
+                        const last = readings[readings.length - 1] || {};
+                        const currentTemp = last.temperature ?? last.temperature_avg ?? 0;
+
+                        if (currentTemp !== undefined) {
+                            totalTempSum += currentTemp;
+                            roomCount++;
+                            if (currentTemp > hottest.temp) {
+                                hottest.temp = currentTemp;
                                 hottest.name = location.location_name;
                             }
                         }
 
                         let badgeClass = 'reading-badge';
-                        if (avgTemp >= 30) badgeClass += ' hot';
-                        else if (avgTemp >= 26) badgeClass += ' warm';
-                        else if (avgTemp > 0 && avgTemp < 18) badgeClass += ' cold';
+                        if (currentTemp >= 30) badgeClass += ' hot';
+                        else if (currentTemp >= 26) badgeClass += ' warm';
+                        else if (currentTemp > 0 && currentTemp < 18) badgeClass += ' cold';
 
                         const card = document.createElement('div');
                         card.className = 'location-card';
@@ -266,16 +270,16 @@
                             <h2>${location.location_name}</h2>
                             <div class="${badgeClass}">
                                 <div class="metric">
-                                    <span>Mitjana</span>
-                                    <strong>${last.temperature_avg ?? '-'} °C</strong>
+                                    <span>Actual</span>
+                                    <strong>${currentTemp} °C</strong>
                                 </div>
                                 <div class="metric">
                                     <span>Màxima</span>
-                                    <strong>${last.temperature_max ?? '-'} °C</strong>
+                                    <strong>${last.temperature_max ?? currentTemp} °C</strong>
                                 </div>
                                 <div class="metric">
                                     <span>Mínima</span>
-                                    <strong>${last.temperature_min ?? '-'} °C</strong>
+                                    <strong>${last.temperature_min ?? currentTemp} °C</strong>
                                 </div>
                                 <div class="metric">
                                     <span>Humitat</span>
@@ -290,7 +294,7 @@
                         appContainer.appendChild(card);
 
                         const labels = readings.map(r => r.label);
-                        const temps = readings.map(r => r.temperature_avg);
+                        const temps = readings.map(r => r.temperature ?? r.temperature_avg);
                         const humidity = readings.map(r => r.humidity);
 
                         const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
