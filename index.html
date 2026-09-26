@@ -252,7 +252,6 @@
             `;
             summaryBar.style.display = 'none';
 
-            // ensure view_mode is always per_location to retrieve the room names
             const apiUrl = `https://aulesquecremen.cat/api/v1/public/chart-data?range=${currentRange}&view_mode=per_location&school_id=5073`;
 
             try {
@@ -272,7 +271,6 @@
                         const readings = location.readings || [];
                         if (readings.length === 0) return;
 
-                        // parse labels handling different string formats returned by API
                         const labels = readings.map(r => {
                             const lbl = String(r.label);
                             if (lbl === 'null' || lbl === 'undefined') return '';
@@ -293,7 +291,6 @@
                             return lbl;
                         });
 
-                        // fallback map due to dynamic parameter naming
                         const temps = readings.map(r => r.temperature_avg !== undefined ? r.temperature_avg : (r.temperature || 0));
                         const humidity = readings.map(r => r.humidity || 0);
 
@@ -331,7 +328,7 @@
                                     <span>Màxima</span>
                                     <strong>${maxTemp} °C</strong>
                                 </div>
-                                <div class="metric">
+                                <div class="6metric">
                                     <span>Mínima</span>
                                     <strong>${minTemp} °C</strong>
                                 </div>
@@ -347,7 +344,6 @@
 
                         appContainer.appendChild(card);
 
-                        // setup chart for current room
                         const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
                         new Chart(ctx, {
                             type: 'line',
@@ -416,6 +412,9 @@
                 console.error(err);
                 appContainer.innerHTML = '<div class="status-msg">Error de connexió amb l\'API.</div>';
             }
+            
+            // Reaplicar el filtre actiu per si s'havia escrit alguna cosa a la barra de cerca abans de recarregar
+            filterAules();
         }
 
         function filterAules() {
