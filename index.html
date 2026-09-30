@@ -5,7 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estat de les Aules - Temperatura i Humitat | Escola Tabor</title>
     <meta name="description" content="Consulta l'estat de les aules de l'Escola Tabor: temperatura i humitat en temps real. Dades actualitzades des de aulesquecremen.cat amb històric de 24 hores, 7 dies o 30 dies.">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="canonical" href="https://tabor.netmomo.com/">
+    <meta property="og:title" content="Estat de les Aules - Escola Tabor">
+    <meta property="og:description" content="Temperatura i humitat en temps real a les aules de l'Escola Tabor">
+    <meta property="og:image" content="https://tabor.netmomo.com/logo.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Estat de les Aules - Escola Tabor">
+    <meta name="twitter:description" content="Temperatura i humitat en temps real a les aules de l'Escola Tabor">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Estat de les Aules - Escola Tabor",
+        "description": "Temperatura i humitat en temps real a les aules de l'Escola Tabor"
+    }
+    </script>
     <style>
         :root {
             --primary: #2563eb;
@@ -204,7 +222,7 @@
         </div>
     </header>
 
-    <div class="main-container">
+    <main class="main-container">
         <div class="summary-bar" id="summaryBar" style="display: none;">
             <div class="summary-card">
                 <span>Temp. Mitjana</span>
@@ -238,7 +256,7 @@
                 Carregant registres de les aules...
             </div>
         </div>
-    </div>
+    </main>
 
     <footer>
         <p style="margin: 0; color: var(--text-muted); font-size: 13px;">
